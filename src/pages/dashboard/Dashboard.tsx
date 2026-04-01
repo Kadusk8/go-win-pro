@@ -24,13 +24,19 @@ type Appointment = {
   responsible: string;
   status: string;
   relatorio: string | null;
-  companies?: { name: string };
+  companies?: { name: string } | { name: string }[];
+};
+
+type AppointmentSummary = {
+  id: string;
+  status: string;
+  relatorio: string | null;
 };
 
 type DashboardData = {
   companies: Company[];
   upcomingAppointments: Appointment[];
-  allAppointments: Appointment[];
+  allAppointments: AppointmentSummary[];
 };
 
 function formatDate(dateStr: string) {
@@ -97,7 +103,6 @@ export default function Dashboard() {
 
   const realizados = allAppointments.filter((a) => a.status === 'Realizado').length;
   const semRelatorio = allAppointments.filter((a) => a.status === 'Realizado' && !a.relatorio).length;
-  const todayStr = new Date().toISOString().split('T')[0];
   const hoje = allAppointments.filter((a) => a.status === 'Agendado').length;
 
   const segmentCounts = companies.reduce<Record<string, number>>((acc, c) => {
@@ -213,7 +218,7 @@ export default function Dashboard() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-900 truncate">{appt.title}</p>
                     <p className="text-xs text-slate-500 mt-0.5 truncate">
-                      {appt.companies?.name ?? '—'} · {formatDate(appt.date)}
+                      {(Array.isArray(appt.companies) ? appt.companies[0]?.name : appt.companies?.name) ?? '—'} · {formatDate(appt.date)}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
