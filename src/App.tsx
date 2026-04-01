@@ -6,6 +6,8 @@ import Dashboard from './pages/dashboard/Dashboard';
 import CompanyList from './pages/companies/CompanyList';
 import AppointmentsCalendar from './pages/appointments/AppointmentsCalendar';
 import ChatIA from './pages/chat/ChatIA';
+import KanbanPage from './pages/kanban/KanbanPage';
+import TeamPage from './pages/team/TeamPage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -23,6 +25,8 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/companies" element={<CompanyList />} />
           <Route path="/appointments" element={<AppointmentsCalendar />} />
+          <Route path="/kanban" element={<KanbanPage />} />
+          <Route path="/team" element={<TeamPage />} />
           <Route path="/chat" element={<ChatIA />} />
         </Route>
       </Routes>

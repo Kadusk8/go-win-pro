@@ -20,6 +20,8 @@ type Appointment = {
 };
 
 type Company = { id: string; name: string };
+type TeamMember = { id: string; name: string; role: string | null };
+
 
 type AppointmentForm = {
   title: string;
@@ -70,6 +72,7 @@ function isPast(dateStr: string) {
 export default function AppointmentsCalendar() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [team, setTeam] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -88,7 +91,7 @@ export default function AppointmentsCalendar() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [apptRes, compRes] = await Promise.all([
+    const [apptRes, compRes, teamRes] = await Promise.all([
       supabase
         .from('appointments')
         .select('*, companies(name)')
@@ -98,6 +101,10 @@ export default function AppointmentsCalendar() {
         .from('companies')
         .select('id, name')
         .order('name', { ascending: true }),
+      supabase
+        .from('team_members')
+        .select('id, name, role')
+        .order('name', { ascending: true }),
     ]);
 
     if (apptRes.error || compRes.error) {
@@ -105,6 +112,7 @@ export default function AppointmentsCalendar() {
     } else {
       setAppointments((apptRes.data ?? []) as Appointment[]);
       setCompanies(compRes.data ?? []);
+      setTeam(teamRes.data ?? []);
     }
     setLoading(false);
   }, []);
@@ -352,11 +360,24 @@ export default function AppointmentsCalendar() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Responsável</label>
-                <input type="text" className="block w-full rounded-lg border-0 py-2.5 px-3 text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-brand-600 sm:text-sm"
-                  value={form.responsible}
-                  onChange={(e) => setForm({ ...form, responsible: e.target.value })}
-                  placeholder="Nome do responsável" />
+                <label className="block text-sm font-medium text-slate-700 mb-1">Equipe</label>
+                {team.length === 0 ? (
+                  <input type="text" className="block w-full rounded-lg border-0 py-2.5 px-3 text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-brand-600 sm:text-sm"
+                    value={form.responsible}
+                    onChange={(e) => setForm({ ...form, responsible: e.target.value })}
+                    placeholder="Nome do responsável" />
+                ) : (
+                  <select className="block w-full rounded-lg border-0 py-2.5 px-3 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-brand-600 sm:text-sm bg-white"
+                    value={form.responsible}
+                    onChange={(e) => setForm({ ...form, responsible: e.target.value })}>
+                    <option value="">Selecione um responsável...</option>
+                    {team.map((m) => (
+                      <option key={m.id} value={m.name}>
+                        {m.name}{m.role ? ` — ${m.role}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
 

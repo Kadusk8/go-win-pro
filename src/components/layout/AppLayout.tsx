@@ -1,10 +1,12 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Building2, CalendarDays, MessageSquareText, LogOut } from 'lucide-react';
+import { LayoutDashboard, Building2, CalendarDays, MessageSquareText, LogOut, KanbanSquare, Users } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Membros', href: '/companies', icon: Building2 },
   { name: 'Agendamentos', href: '/appointments', icon: CalendarDays },
+  { name: 'Kanban', href: '/kanban', icon: KanbanSquare },
+  { name: 'Equipe', href: '/team', icon: Users },
   { name: 'Chat AI', href: '/chat', icon: MessageSquareText },
 ];
 
