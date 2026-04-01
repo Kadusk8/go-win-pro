@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, X, Loader2, AlertCircle, ChevronLeft, ChevronRight, Trash2, KanbanSquare } from 'lucide-react';
+import { Plus, X, Loader2, AlertCircle, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 type TeamMember = { id: string; name: string; role: string | null };
