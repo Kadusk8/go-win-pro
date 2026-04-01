@@ -1,0 +1,3 @@
+ALTER TABLE public.companies
+  ADD COLUMN IF NOT EXISTS esposo TEXT,
+  ADD COLUMN IF NOT EXISTS esposa TEXT;
