@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Calendar as CalendarIcon, Clock, Users, Plus, Loader2,
-  AlertCircle, X, Building, CheckCircle2, FileText, ClipboardList, Pencil,
+  AlertCircle, X, Building, CheckCircle2, FileText, ClipboardList, Pencil, Trash2,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
@@ -81,6 +81,8 @@ export default function AppointmentsCalendar() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [form, setForm] = useState<AppointmentForm>(EMPTY_FORM);
+
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const [reportAppt, setReportAppt] = useState<Appointment | null>(null);
   const [reportText, setReportText] = useState('');
@@ -201,6 +203,12 @@ export default function AppointmentsCalendar() {
     setIsSavingReport(false);
   }
 
+  async function handleDelete(id: string) {
+    const { error: err } = await supabase.from('appointments').delete().eq('id', id);
+    if (!err) setAppointments((prev) => prev.filter((a) => a.id !== id));
+    setDeleteConfirmId(null);
+  }
+
   function openReport(appt: Appointment) {
     setReportAppt(appt);
     setReportText(appt.relatorio ?? '');
@@ -299,7 +307,7 @@ export default function AppointmentsCalendar() {
               ) : (
                 <div className="space-y-3">
                   {upcoming.map((appt) => (
-                    <AppointmentCard key={appt.id} appt={appt} onReport={() => openReport(appt)} onEdit={() => openEdit(appt)} />
+                    <AppointmentCard key={appt.id} appt={appt} onReport={() => openReport(appt)} onEdit={() => openEdit(appt)} deleteConfirmId={deleteConfirmId} onDeleteRequest={setDeleteConfirmId} onDeleteConfirm={handleDelete} />
                   ))}
                 </div>
               )}
@@ -316,7 +324,7 @@ export default function AppointmentsCalendar() {
                 </h2>
                 <div className="space-y-3">
                   {past.filter((a) => a.status !== 'Realizado').map((appt) => (
-                    <AppointmentCard key={appt.id} appt={appt} onReport={() => openReport(appt)} onEdit={() => openEdit(appt)} showReportCta />
+                    <AppointmentCard key={appt.id} appt={appt} onReport={() => openReport(appt)} onEdit={() => openEdit(appt)} showReportCta deleteConfirmId={deleteConfirmId} onDeleteRequest={setDeleteConfirmId} onDeleteConfirm={handleDelete} />
                   ))}
                 </div>
               </section>
@@ -330,7 +338,7 @@ export default function AppointmentsCalendar() {
                 </h2>
                 <div className="space-y-3">
                   {appointments.filter((a) => a.status === 'Realizado').map((appt) => (
-                    <AppointmentCard key={appt.id} appt={appt} onReport={() => openReport(appt)} onEdit={() => openEdit(appt)} />
+                    <AppointmentCard key={appt.id} appt={appt} onReport={() => openReport(appt)} onEdit={() => openEdit(appt)} deleteConfirmId={deleteConfirmId} onDeleteRequest={setDeleteConfirmId} onDeleteConfirm={handleDelete} />
                   ))}
                 </div>
               </section>
@@ -478,14 +486,18 @@ export default function AppointmentsCalendar() {
   );
 }
 
-function AppointmentCard({ appt, onReport, onEdit, showReportCta }: {
+function AppointmentCard({ appt, onReport, onEdit, showReportCta, deleteConfirmId, onDeleteRequest, onDeleteConfirm }: {
   appt: Appointment;
   onReport: () => void;
   onEdit: () => void;
   showReportCta?: boolean;
+  deleteConfirmId: string | null;
+  onDeleteRequest: (id: string | null) => void;
+  onDeleteConfirm: (id: string) => void;
 }) {
   const done = appt.status === 'Realizado';
   const members = appt.responsible ? appt.responsible.split(', ').filter(Boolean) : [];
+  const confirming = deleteConfirmId === appt.id;
   return (
     <div className={`rounded-xl border bg-white p-5 shadow-sm transition-colors ${done ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:border-brand-300'}`}>
       <div className="flex items-start justify-between gap-4">
@@ -519,10 +531,7 @@ function AppointmentCard({ appt, onReport, onEdit, showReportCta }: {
         </div>
 
         <div className="flex flex-col gap-1.5 shrink-0">
-          <button
-            onClick={onEdit}
-            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer"
-          >
+          <button onClick={onEdit} className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer">
             <Pencil className="h-3 w-3" />
             Editar
           </button>
@@ -539,6 +548,21 @@ function AppointmentCard({ appt, onReport, onEdit, showReportCta }: {
             <FileText className="h-3 w-3" />
             {done ? 'Relatório' : 'Registrar'}
           </button>
+          {confirming ? (
+            <div className="flex gap-1">
+              <button onClick={() => onDeleteConfirm(appt.id)} className="flex-1 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg px-2 py-1.5 cursor-pointer transition-colors">
+                Confirmar
+              </button>
+              <button onClick={() => onDeleteRequest(null)} className="flex-1 text-xs text-slate-500 hover:text-slate-700 rounded-lg px-2 py-1.5 cursor-pointer bg-slate-100 hover:bg-slate-200 transition-colors">
+                Cancelar
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => onDeleteRequest(appt.id)} className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 transition-colors cursor-pointer">
+              <Trash2 className="h-3 w-3" />
+              Excluir
+            </button>
+          )}
         </div>
       </div>
     </div>
